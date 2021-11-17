@@ -1,6 +1,9 @@
 package routes
 
-import "github.com/go-chi/chi/v5"
+import (
+	users "github.com/RamiroCuenca/users-crud-test/users/controllers"
+	"github.com/go-chi/chi/v5"
+)
 
 // Fetch app multiplexor
 func GetRouter() *chi.Mux {
@@ -9,7 +12,7 @@ func GetRouter() *chi.Mux {
 	// Path prefix
 	pp := "/api/users"
 
-	mux.Post(pp+"/create", nil)
+	mux.Post(pp+"/create", users.Create)
 	mux.Get(pp+"/readall", nil)
 	mux.Get(pp+"/readbyname", nil)
 	mux.Get(pp+"/readbyemail", nil)
