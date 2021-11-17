@@ -134,6 +134,82 @@ func ReadAll(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, http.StatusOK, []byte(data))
 }
 
+// Filter by NAME and/or EMAIL
+// NAME and/or EMAIL must be sent as queryparams
+func Filter(w http.ResponseWriter, r *http.Request) {
+	// Decode NAME and EMAIL from r.body and assign it to u var
+	var u models.User
+	err := json.NewDecoder(r.Body).Decode(&u)
+	if err != nil {
+		// errorResponse(w, http.StatusBadRequest, "Couldn't decode request body", err)
+		// return
+		u.Name = ""
+		u.Email = ""
+	}
+
+	// Array of users where we are going to store all fetched values
+	var arr []models.User
+
+	// Set up query
+	q := `SELECT * FROM users 
+	WHERE name LIKE '%' || $1 || '%' 
+	AND email LIKE '%' || $2 || '%';`
+
+	// Fetch database
+	db := connection.GetPostgreClient()
+
+	// Start transaction
+	tx, err := db.Begin()
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error starting db transaction", err)
+		return
+	}
+
+	// Prepare transaction
+	stmt, err := tx.Prepare(q)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error preparing db transaction", err)
+		tx.Rollback()
+		return
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	rows, err := stmt.Query(u.Name, u.Email)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error fetching users", err)
+		tx.Rollback()
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user models.User
+
+		err = rows.Scan(&user.ID, &user.Name, &user.Email)
+		if err != nil {
+			errorResponse(w, http.StatusBadRequest, "Problem scanning fetched users", err)
+			tx.Rollback()
+			return
+		}
+
+		arr = append(arr, user)
+	}
+
+	// Commit transaction
+	tx.Commit()
+
+	// Encode user
+	json, _ := json.Marshal(arr)
+
+	data := fmt.Sprintf(`{
+		"message": "%v users where fetched",
+		"user": %v
+	}`, len(arr), string(json))
+
+	sendResponse(w, http.StatusOK, []byte(data))
+}
+
 // Send response to HTTP requests
 func sendResponse(w http.ResponseWriter, status int, data []byte) {
 	w.Header().Set("Content-Type", "application/json")
