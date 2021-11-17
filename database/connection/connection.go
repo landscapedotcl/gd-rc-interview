@@ -28,8 +28,7 @@ func GetPostgreClient() *PostgreClient {
 	// Open method does not create the connection, it simply check if the arguments work properly
 	// That's why we must check with Ping() method if it's working!
 	db, err := sql.Open("postgres", dsn)
-	// Close DB after program exits
-	defer db.Close()
+
 	if err != nil {
 		log.Fatalf("There is a problem with typed data source name: %v", err)
 	}
