@@ -29,7 +29,7 @@ func Validate(u User) error {
 
 	// Check that the Email is valid
 	if !strings.Contains(u.Email, "@") {
-		return errors.New("Email can not be empty")
+		return errors.New("Email must be valid (Contain an @)")
 	}
 
 	return nil
