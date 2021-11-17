@@ -9,7 +9,7 @@ import (
 )
 
 type PostgreClient struct {
-	db *sql.DB
+	*sql.DB
 }
 
 const (
@@ -42,5 +42,5 @@ func GetPostgreClient() *PostgreClient {
 	fmt.Println("Connected to database successfully")
 
 	// Return the database
-	return &PostgreClient{db: db}
+	return &PostgreClient{db}
 }
