@@ -13,7 +13,7 @@ func GetRouter() *chi.Mux {
 	pp := "/api/users"
 
 	mux.Post(pp+"/create", users.Create)
-	mux.Get(pp+"/readall", nil)
+	mux.Get(pp+"/readall", users.ReadAll)
 	mux.Get(pp+"/readbyname", nil)
 	mux.Get(pp+"/readbyemail", nil)
 	mux.Put(pp+"/update", nil)
