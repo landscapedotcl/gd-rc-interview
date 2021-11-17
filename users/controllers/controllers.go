@@ -70,6 +70,70 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	sendResponse(w, http.StatusOK, []byte(data))
 }
 
+// Read all users.
+// No parameters are required.
+func ReadAll(w http.ResponseWriter, r *http.Request) {
+	// Array of users where we are going to store all fetched values
+	var arr []models.User
+
+	// Set up query
+	q := `SELECT * FROM users`
+
+	// Fetch database
+	db := connection.GetPostgreClient()
+
+	// Start transaction
+	tx, err := db.Begin()
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error starting db transaction", err)
+		return
+	}
+
+	// Prepare transaction
+	stmt, err := tx.Prepare(q)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error preparing db transaction", err)
+		tx.Rollback()
+		return
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	rows, err := stmt.Query()
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error fetching users", err)
+		tx.Rollback()
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var u models.User
+
+		err = rows.Scan(&u.ID, &u.Name, &u.Email)
+		if err != nil {
+			errorResponse(w, http.StatusBadRequest, "Problem scanning fetched users", err)
+			tx.Rollback()
+			return
+		}
+
+		arr = append(arr, u)
+	}
+
+	// Commit transaction
+	tx.Commit()
+
+	// Encode user
+	json, _ := json.Marshal(arr)
+
+	data := fmt.Sprintf(`{
+		"message": "%v users where fetched",
+		"user": %v
+	}`, len(arr), string(json))
+
+	sendResponse(w, http.StatusOK, []byte(data))
+}
+
 // Send response to HTTP requests
 func sendResponse(w http.ResponseWriter, status int, data []byte) {
 	w.Header().Set("Content-Type", "application/json")
