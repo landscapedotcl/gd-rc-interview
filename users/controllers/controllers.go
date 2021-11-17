@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -141,8 +142,6 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 	var u models.User
 	err := json.NewDecoder(r.Body).Decode(&u)
 	if err != nil {
-		// errorResponse(w, http.StatusBadRequest, "Couldn't decode request body", err)
-		// return
 		u.Name = ""
 		u.Email = ""
 	}
@@ -206,6 +205,62 @@ func Filter(w http.ResponseWriter, r *http.Request) {
 		"message": "%v users where fetched",
 		"user": %v
 	}`, len(arr), string(json))
+
+	sendResponse(w, http.StatusOK, []byte(data))
+}
+
+// Delete user by id
+func Delete(w http.ResponseWriter, r *http.Request) {
+	// Fetch the id from queryparams
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		errorResponse(w, http.StatusBadRequest, "Bad request", errors.New("'id' parameter must be sent through URL"))
+		return
+	}
+
+	// Create a user object where store the data from deleted user
+	var u models.User
+
+	// Set up query
+	q := `DELETE FROM users WHERE id = $1 RETURNING *`
+
+	// Fetch database
+	db := connection.GetPostgreClient()
+
+	// Start transaction
+	tx, err := db.Begin()
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error starting db transaction", err)
+		return
+	}
+
+	// Prepare transaction
+	stmt, err := tx.Prepare(q)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Error preparing db transaction", err)
+		tx.Rollback()
+		return
+	}
+	defer stmt.Close()
+
+	// Execute the query
+	err = stmt.QueryRow(id).Scan(&u.ID, &u.Name, &u.Email)
+	if err != nil {
+		errorResponse(w, http.StatusInternalServerError, "Couldn't fetch any user with provided 'id'", err)
+		tx.Rollback()
+		return
+	}
+
+	// Commit transaction
+	tx.Commit()
+
+	// Encode user
+	json, _ := json.Marshal(u)
+
+	data := fmt.Sprintf(`{
+		"message": "User deleted successfully",
+		"user": %v
+	}`, string(json))
 
 	sendResponse(w, http.StatusOK, []byte(data))
 }
