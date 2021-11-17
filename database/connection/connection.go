@@ -2,7 +2,6 @@ package connection
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	_ "github.com/lib/pq" // it provides the drivers for postgres
@@ -37,8 +36,6 @@ func GetPostgreClient() *PostgreClient {
 	if err != nil {
 		log.Fatalf("There is a problem with the connection to the database: %v", err)
 	}
-
-	fmt.Println("Connected to database successfully")
 
 	// Return the database
 	return &PostgreClient{db}
