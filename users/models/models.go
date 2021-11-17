@@ -11,7 +11,7 @@ type User struct {
 	Email string `json:"email"`
 }
 
-func validate(u User) error {
+func Validate(u User) error {
 	// Check that the Name is not empty.
 	if u.Name == "" {
 		return errors.New("Name can not be empty")

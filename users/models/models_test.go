@@ -11,7 +11,7 @@ func TestUserWithCorrectParams(t *testing.T) {
 		Email: "somerandomtext@example.com",
 	}
 
-	if err := validate(u); err != nil {
+	if err := Validate(u); err != nil {
 		t.Errorf("❌ Could not create user with correct params: %v.", err)
 	} else {
 		t.Log("✅ User created with correct params successfully.")
@@ -25,7 +25,7 @@ func TestUserWithEmptyName(t *testing.T) {
 		Email: "somerandomtext@example.com",
 	}
 
-	if err := validate(u); err == nil {
+	if err := Validate(u); err == nil {
 		t.Errorf("❌ User created with empty name: %v.", err)
 	} else {
 		t.Log("✅ Validator allow user creation as expected.")
@@ -39,7 +39,7 @@ func TestUserWithLargeName(t *testing.T) {
 		Email: "somerandomtext@example.com",
 	}
 
-	if err := validate(u); err == nil {
+	if err := Validate(u); err == nil {
 		t.Errorf("❌ User created with large name: %v.", err)
 	} else {
 		t.Log("✅ Validator stopped the creation as expected.")
@@ -53,7 +53,7 @@ func TestUserWithEmptyEmail(t *testing.T) {
 		Email: "",
 	}
 
-	if err := validate(u); err == nil {
+	if err := Validate(u); err == nil {
 		t.Errorf("❌ User created with an empty email: %v.", err)
 	} else {
 		t.Log("✅ Validator stopped the creation as expected.")
@@ -67,7 +67,7 @@ func TestUserWithInvalidEmail(t *testing.T) {
 		Email: "testtest.com",
 	}
 
-	if err := validate(u); err == nil {
+	if err := Validate(u); err == nil {
 		t.Errorf("❌ User created with an invalid email: %v.", err)
 	} else {
 		t.Log("✅ Validator stopped the creation as expected.")
