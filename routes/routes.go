@@ -14,8 +14,7 @@ func GetRouter() *chi.Mux {
 
 	mux.Post(pp+"/create", users.Create)
 	mux.Get(pp+"/readall", users.ReadAll)
-	mux.Get(pp+"/readbyname", nil)
-	mux.Get(pp+"/readbyemail", nil)
+	mux.Get(pp+"/filter", users.Filter)
 	mux.Put(pp+"/update", nil)
 	mux.Delete(pp+"/delete", nil)
 
